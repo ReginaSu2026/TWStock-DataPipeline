@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.11-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org/)
 [![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-Deployed-222222?style=for-the-badge&logo=github&logoColor=white)](https://ReginaSu2026.github.io/TWStock-DataPipeline/)
-[![License](https://img.shields.io/badge/License-MIT-green.style=for-the-badge)](LICENSE)
+
 
 <p align="center">
   <b>自動化台股資料 Pipeline | 自建 MariaDB 籌碼資料庫 | 策略選股分析</b>
