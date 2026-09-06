@@ -56,7 +56,7 @@ STOCK_NAMES = {
 finmind_loader = DataLoader()
 
 st.set_page_config(
-    page_title="台股策略雷達",
+    page_title="Bloomstx台股策略雷達",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
