@@ -264,7 +264,7 @@ def check_institutional_buys(stock_id):
         today = pd.Timestamp.today()
         data = finmind_loader.taiwan_stock_institutional_investors(
             stock_id=stock_id,
-            start_date=(today - pd.Timedelta(days=14)).strftime("%Y-%m-%d"),
+            start_date=(today - pd.Timedelta(value=14, unit="D")).strftime("%Y-%m-%d"),
             end_date=today.strftime("%Y-%m-%d"),
         )
         required = {"date", "name", "buy", "sell"}
