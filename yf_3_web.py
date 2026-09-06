@@ -372,11 +372,28 @@ def render_table(frame):
         "FinalPullbackSignal": "外資連買回檔", "PreBreakoutSignal": "突破前兆",
     }
     shown = frame[columns].rename(columns=display_columns).copy()
-    numeric_columns = [
-        "收盤價", "5日均線", "10日均線", "20日均線", "5日乖離率(%)",
-        "KD-K值", "KD-D值", "布林寬度",
-    ]
-    return shown.style.format({column: "{:.2f}" for column in numeric_columns})
+    shown["股票代號"] = shown["股票代號"].map(
+        lambda ticker: f"https://finance.yahoo.com/quote/{ticker}/analysis/"
+    )
+    return shown
+
+
+def table_config():
+    return {
+        "股票代號": st.column_config.LinkColumn(
+            "股票代號",
+            display_text=r".*/quote/([^/]+)/analysis/",
+            help="開啟 Yahoo Finance 技術分析頁面",
+        ),
+        "收盤價": st.column_config.NumberColumn("收盤價", format="%.2f"),
+        "5日均線": st.column_config.NumberColumn("5日均線", format="%.2f"),
+        "10日均線": st.column_config.NumberColumn("10日均線", format="%.2f"),
+        "20日均線": st.column_config.NumberColumn("20日均線", format="%.2f"),
+        "5日乖離率(%)": st.column_config.NumberColumn("5日乖離率(%)", format="%.2f"),
+        "KD-K值": st.column_config.NumberColumn("KD-K值", format="%.2f"),
+        "KD-D值": st.column_config.NumberColumn("KD-D值", format="%.2f"),
+        "布林寬度": st.column_config.NumberColumn("布林寬度", format="%.2f"),
+    }
 
 
 def main():
@@ -417,24 +434,30 @@ def main():
     tabs = st.tabs(["策略總覽", "多頭回檔", "突破前兆", "全部資料"])
     with tabs[0]:
         st.subheader("今日策略候選")
-        st.dataframe(render_table(output[signal_mask].sort_values("Close", ascending=False)), width="stretch", hide_index=True)
+        st.dataframe(
+            render_table(output[signal_mask].sort_values("Close", ascending=False)),
+            column_config=table_config(), width="stretch", hide_index=True,
+        )
     with tabs[1]:
         st.subheader("均線多頭回檔與外資連買")
         pullback = output[output["FinalPullbackSignal"]].sort_values("K")
         if pullback.empty:
             st.info("目前沒有符合回檔與外資連買條件的標的。")
         else:
-            st.dataframe(render_table(pullback), width="stretch", hide_index=True)
+            st.dataframe(render_table(pullback), column_config=table_config(), width="stretch", hide_index=True)
     with tabs[2]:
         st.subheader("布林壓縮與量縮突破前兆")
         breakout = output[output["PreBreakoutSignal"]].sort_values("BB_Width")
         if breakout.empty:
             st.info("目前沒有符合突破前兆條件的標的。")
         else:
-            st.dataframe(render_table(breakout), width="stretch", hide_index=True)
+            st.dataframe(render_table(breakout), column_config=table_config(), width="stretch", hide_index=True)
     with tabs[3]:
         st.subheader("全部有效技術資料")
-        st.dataframe(render_table(output.sort_values("Ticker")), width="stretch", hide_index=True)
+        st.dataframe(
+            render_table(output.sort_values("Ticker")),
+            column_config=table_config(), width="stretch", hide_index=True,
+        )
 
 
 if __name__ == "__main__":
