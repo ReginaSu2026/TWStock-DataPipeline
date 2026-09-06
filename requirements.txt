@@ -1,0 +1,5 @@
+finmind>=2.0.2
+pandas>=2.0.0,<3.0.0
+requests>=2.34.2
+streamlit>=1.50.0
+yfinance>=0.2.66
