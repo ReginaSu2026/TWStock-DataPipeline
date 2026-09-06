@@ -1,0 +1,25 @@
+[project]
+name = "twstock-datapipeline"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ReginaSu2026", email = "pythonsu2026@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "finmind>=2.0.2",
+    "pandas>=2.0.0,<3.0.0",
+    "pymysql>=1.2.0",
+    "requests>=2.34.2",
+    "sqlalchemy>=2.0.52",
+    "streamlit>=1.50.0",
+    "yfinance>=0.2.66",
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
