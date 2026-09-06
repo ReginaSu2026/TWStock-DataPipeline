@@ -78,7 +78,7 @@ def fetch_market_quotes():
         ),
         (
             "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes",
-            ".TWO", "SecuritiesCompanyCode", "SecuritiesCompanyName", "Close",
+            ".TWO", "SecuritiesCompanyCode", "CompanyName", "Close",
             "TradingShares", "Open", "High", "Low",
         ),
     ]
