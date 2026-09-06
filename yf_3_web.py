@@ -7,7 +7,7 @@ import streamlit as st
 import yfinance as yf
 from FinMind.data import DataLoader
 #本程式是一個台股自動化選股與量化篩選工具，旨在結合技術指標與外資籌碼面，自台股上市櫃股票中篩選出具備「回檔整理」或「即將突破」潛力的標的。
-#結合「固定觀察清單（WATCH_LIST）」、「高股價區間（100~250元）」與「大成交量（前 300 名）」建立候選股票池
+#只掃描成交量前 200 名股票，並以價格區間與技術指標判斷策略訊號
 #訊號觸發與輸出：判定符合特定策略（回檔、突破前兆、外資連買）的股票並列印結果
 
 #多頭回檔訊號 (PullbackSignal)條件：均線呈多頭排列 + 股價離 20 日線 0~5% 內 + 5日乖離率介於 0~3.5% + KD 之 K 值 $\le$ 70。目的：尋找強勢多頭格局中，拉回至支撐位置的買點。
@@ -16,7 +16,7 @@ from FinMind.data import DataLoader
 #目的：結合技術面回檔與籌碼面法人護盤，提高勝率。
 
 #布林壓縮+量縮訊號 (PreBreakoutSignal)
-#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.20 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
+#條件：成交量前 200 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.20 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
 #目的：捕捉熱門股在窄幅震盪、極致量縮後的即將變盤突破點。
 
 
@@ -26,7 +26,7 @@ from FinMind.data import DataLoader
 # 三個原始程式的共用設定
 PRICE_MIN = 100
 PRICE_MAX = 250
-TOP_VOLUME_LIMIT = 300
+TOP_VOLUME_LIMIT = 200
 SCAN_WORKERS = 8
 FINMIND_INTERVAL_SECONDS = 0.5
 
@@ -83,7 +83,21 @@ st.markdown(
     [data-testid="stDataFrame"] { border: 1px solid #eadfd9; border-radius: 12px; }
     .hero-note { color: #765f57; font-size: 1rem; margin-bottom: 1.2rem; }
     [data-testid="stCaptionContainer"] { color: #765f57 !important; }
-    [data-baseweb="tab-list"] [role="tab"] { color: #765f57 !important; }
+    [data-baseweb="tab-list"] [role="tab"],
+    [data-baseweb="tab"],
+    [role="tab"] {
+        color: #765f57 !important;
+        opacity: 1 !important;
+    }
+    [data-baseweb="tab-list"] [role="tab"] *,
+    [data-baseweb="tab"] *,
+    [role="tab"] * {
+        color: inherit !important;
+    }
+    [data-baseweb="tab-list"] [role="tab"][aria-selected="true"] {
+        color: #9c5b43 !important;
+        font-weight: 700;
+    }
 
     [data-theme="dark"] [data-testid="stAppViewContainer"],
     [data-theme="dark"] .stApp {
@@ -113,7 +127,10 @@ st.markdown(
         color: #f5f7fa !important;
     }
     [data-theme="dark"] [data-baseweb="tab-list"] [role="tab"] {
-        color: #d8dee5 !important;
+        color: #f3d6dc !important;
+    }
+    [data-theme="dark"] [data-baseweb="tab-list"] [role="tab"] * {
+        color: #f3d6dc !important;
     }
     [data-theme="dark"] [data-testid="stDataFrame"] {
         border-color: #4b3039;
@@ -185,17 +202,17 @@ def fetch_market_quotes():
 
 
 def build_candidates(quotes):
-    """建立自選股、100~250 元股價池、成交量前 300 大的聯集。"""
-    price_pool = {
-        ticker for ticker, quote in quotes.items()
-        if PRICE_MIN <= quote["Close"] <= PRICE_MAX
-    }
+    """只建立成交量前 200 大的候選股票池。"""
     volume_pool = sorted(
         quotes,
         key=lambda ticker: quotes[ticker]["Volume"] if pd.notna(quotes[ticker]["Volume"]) else -1,
         reverse=True,
     )[:TOP_VOLUME_LIMIT]
-    tickers = set(WATCH_LIST) | price_pool | set(volume_pool)
+    price_pool = {
+        ticker for ticker in volume_pool
+        if PRICE_MIN <= quotes[ticker]["Close"] <= PRICE_MAX
+    }
+    tickers = set(volume_pool)
     return sorted(tickers), price_pool, set(volume_pool)
 
 
@@ -376,8 +393,8 @@ def main():
         st.divider()
         st.markdown("**目前策略條件**")
         st.write(f"價格區間：{PRICE_MIN} 至 {PRICE_MAX} 元")
-        st.write(f"成交量池：前 {TOP_VOLUME_LIMIT} 名")
-        st.write(f"自選股：{len(WATCH_LIST)} 檔")
+        st.write(f"掃描範圍：成交量前 {TOP_VOLUME_LIMIT} 名")
+        st.write(f"價格條件：{PRICE_MIN} 至 {PRICE_MAX} 元")
 
     if scan_requested or "scan_result" not in st.session_state:
         with st.spinner("正在抓取行情、計算技術指標與外資籌碼，請稍候…"):
