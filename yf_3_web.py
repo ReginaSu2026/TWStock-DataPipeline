@@ -372,9 +372,14 @@ def render_table(frame):
         "FinalPullbackSignal": "外資連買回檔", "PreBreakoutSignal": "突破前兆",
     }
     shown = frame[columns].rename(columns=display_columns).copy()
-    shown["股票代號"] = shown["股票代號"].map(
+    tickers = shown["股票代號"].copy()
+    shown["股票代號"] = tickers.map(
         lambda ticker: f"https://tw.stock.yahoo.com/quote/{ticker}/technical-analysis"
     )
+    shown["股票名稱"] = [
+        f"https://tw.stock.yahoo.com/quote/{ticker}?name={name}"
+        for ticker, name in zip(tickers, shown["股票名稱"])
+    ]
     return shown
 
 
@@ -384,6 +389,11 @@ def table_config():
             "股票代號",
             display_text=r".*/quote/([^/]+)/technical-analysis",
             help="開啟 Yahoo 股市台灣中文技術分析頁面",
+        ),
+        "股票名稱": st.column_config.LinkColumn(
+            "股票名稱",
+            display_text=r".*\?name=(.*)",
+            help="開啟 Yahoo 股市台灣中文基本介紹頁面",
         ),
         "收盤價": st.column_config.NumberColumn("收盤價", format="%.2f"),
         "5日均線": st.column_config.NumberColumn("5日均線", format="%.2f"),
