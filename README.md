@@ -75,6 +75,17 @@
 
 > 🔗 **專案說明網頁**：[點此造訪 GitHub Pages 網頁展示](https://ReginaSu2026.github.io/TWStock-DataPipeline/)
 
+### Streamlit 選股儀表板
+
+安裝依賴後，在專案根目錄執行：
+
+```bash
+python -m pip install -r requirements.txt
+python -m streamlit run yf_3_web.py
+```
+
+瀏覽器開啟 Streamlit 顯示的網址，即可使用市場掃描、策略分頁與可排序選股表格。
+
 <div align="center">
   <i>Developed by ReginaSu2026</i>
 </div>
