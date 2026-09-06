@@ -66,14 +66,54 @@ st.markdown(
     """
     <style>
     .block-container { max-width: 1500px; padding-top: 2rem; padding-bottom: 3rem; }
+    [data-testid="stAppViewContainer"] { background: #ffffff; }
+    h1, h2, h3 { color: #8f1d36; letter-spacing: 0; }
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #fff8f4 0%, #ffffff 100%);
-        border: 1px solid #f2d8ce;
+        background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
+        border: 1px solid #f0d6dc;
         border-radius: 14px;
         padding: 1rem 1.1rem;
     }
-    [data-testid="stDataFrame"] { border: 1px solid #eadfd9; border-radius: 12px; }
-    .hero-note { color: #765f57; font-size: 1rem; margin-bottom: 1.2rem; }
+    [data-testid="stMetricLabel"] { color: #8f1d36; }
+    [data-testid="stDataFrame"] { border: 1px solid #ead9de; border-radius: 12px; }
+    .hero-note { color: #5f6b76; font-size: 1rem; margin-bottom: 1.2rem; }
+
+    [data-theme="dark"] [data-testid="stAppViewContainer"],
+    [data-theme="dark"] .stApp {
+        background: #15191f;
+    }
+    [data-theme="dark"] h1,
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3 {
+        color: #ffb4c1;
+    }
+    [data-theme="dark"] .hero-note,
+    [data-theme="dark"] [data-testid="stCaptionContainer"] {
+        color: #c4ccd4;
+    }
+    [data-theme="dark"] [data-testid="stMetric"] {
+        background: linear-gradient(135deg, #2b1d24 0%, #20262d 100%);
+        border-color: #713344;
+    }
+    [data-theme="dark"] [data-testid="stMetricLabel"] {
+        color: #ffb4c1;
+    }
+    [data-theme="dark"] [data-testid="stMetricValue"],
+    [data-theme="dark"] [data-testid="stMetricDelta"] {
+        color: #f5f7fa;
+    }
+    [data-theme="dark"] [data-testid="stDataFrame"] {
+        border-color: #4b3039;
+    }
+    [data-theme="dark"] [data-testid="stSidebar"] {
+        background: #1d232a;
+        border-right: 1px solid #343c45;
+    }
+    [data-theme="dark"] [data-testid="stSidebar"] h1,
+    [data-theme="dark"] [data-testid="stSidebar"] h2,
+    [data-theme="dark"] [data-testid="stSidebar"] h3 {
+        color: #ffd6dc;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -310,7 +350,7 @@ def render_table(frame):
 
 
 def main():
-    st.title("台股策略雷達")
+    st.title("Bloomstx台股策略雷達")
     st.markdown(
         '<div class="hero-note">用均線排列、KD、布林通道與外資連買條件，快速整理今日值得觀察的股票。</div>',
         unsafe_allow_html=True,
