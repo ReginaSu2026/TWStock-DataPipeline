@@ -373,7 +373,7 @@ def render_table(frame):
     }
     shown = frame[columns].rename(columns=display_columns).copy()
     shown["股票代號"] = shown["股票代號"].map(
-        lambda ticker: f"https://finance.yahoo.com/quote/{ticker}/analysis/"
+        lambda ticker: f"https://tw.stock.yahoo.com/quote/{ticker}/technical-analysis"
     )
     return shown
 
@@ -382,8 +382,8 @@ def table_config():
     return {
         "股票代號": st.column_config.LinkColumn(
             "股票代號",
-            display_text=r".*/quote/([^/]+)/analysis/",
-            help="開啟 Yahoo Finance 技術分析頁面",
+            display_text=r".*/quote/([^/]+)/technical-analysis",
+            help="開啟 Yahoo 股市台灣中文技術分析頁面",
         ),
         "收盤價": st.column_config.NumberColumn("收盤價", format="%.2f"),
         "5日均線": st.column_config.NumberColumn("5日均線", format="%.2f"),
