@@ -66,17 +66,24 @@ st.markdown(
     """
     <style>
     .block-container { max-width: 1500px; padding-top: 2rem; padding-bottom: 3rem; }
-    [data-testid="stAppViewContainer"] { background: #ffffff; }
-    h1, h2, h3 { color: #8f1d36; letter-spacing: 0; }
+    [data-testid="stAppViewContainer"] { background: #fffdfb; }
+    h1, h2, h3,
+    [data-testid="stHeading"] {
+        color: #7c4a36 !important;
+        letter-spacing: 0;
+    }
     [data-testid="stMetric"] {
-        background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
-        border: 1px solid #f0d6dc;
+        background: linear-gradient(135deg, #fff8f4 0%, #ffffff 100%);
+        border: 1px solid #f2d8ce;
         border-radius: 14px;
         padding: 1rem 1.1rem;
     }
-    [data-testid="stMetricLabel"] { color: #8f1d36; }
-    [data-testid="stDataFrame"] { border: 1px solid #ead9de; border-radius: 12px; }
-    .hero-note { color: #5f6b76; font-size: 1rem; margin-bottom: 1.2rem; }
+    [data-testid="stMetricLabel"] { color: #9c5b43; }
+    [data-testid="stMetricValue"] { color: #4b342b !important; }
+    [data-testid="stDataFrame"] { border: 1px solid #eadfd9; border-radius: 12px; }
+    .hero-note { color: #765f57; font-size: 1rem; margin-bottom: 1.2rem; }
+    [data-testid="stCaptionContainer"] { color: #765f57 !important; }
+    [data-baseweb="tab-list"] [role="tab"] { color: #765f57 !important; }
 
     [data-theme="dark"] [data-testid="stAppViewContainer"],
     [data-theme="dark"] .stApp {
@@ -85,7 +92,10 @@ st.markdown(
     [data-theme="dark"] h1,
     [data-theme="dark"] h2,
     [data-theme="dark"] h3 {
-        color: #ffb4c1;
+        color: #ffb4c1 !important;
+    }
+    [data-theme="dark"] [data-testid="stHeading"] {
+        color: #ffd6dc !important;
     }
     [data-theme="dark"] .hero-note,
     [data-theme="dark"] [data-testid="stCaptionContainer"] {
@@ -100,7 +110,10 @@ st.markdown(
     }
     [data-theme="dark"] [data-testid="stMetricValue"],
     [data-theme="dark"] [data-testid="stMetricDelta"] {
-        color: #f5f7fa;
+        color: #f5f7fa !important;
+    }
+    [data-theme="dark"] [data-baseweb="tab-list"] [role="tab"] {
+        color: #d8dee5 !important;
     }
     [data-theme="dark"] [data-testid="stDataFrame"] {
         border-color: #4b3039;
