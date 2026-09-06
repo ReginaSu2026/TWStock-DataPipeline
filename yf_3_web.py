@@ -377,7 +377,7 @@ def render_table(frame):
         lambda ticker: f"https://tw.stock.yahoo.com/quote/{ticker}/technical-analysis"
     )
     shown["股票名稱"] = [
-        f"https://tw.stock.yahoo.com/quote/{ticker}?name={name}"
+        f"https://tw.stock.yahoo.com/quote/{ticker}/profile?name={name}"
         for ticker, name in zip(tickers, shown["股票名稱"])
     ]
     return shown
@@ -392,7 +392,7 @@ def table_config():
         ),
         "股票名稱": st.column_config.LinkColumn(
             "股票名稱",
-            display_text=r".*\?name=(.*)",
+            display_text=r".*/profile\?name=(.*)",
             help="開啟 Yahoo 股市台灣中文基本介紹頁面",
         ),
         "收盤價": st.column_config.NumberColumn("收盤價", format="%.2f"),
