@@ -7,7 +7,7 @@ import streamlit as st
 import yfinance as yf
 from FinMind.data import DataLoader
 #本程式是一個台股自動化選股與量化篩選工具，旨在結合技術指標與外資籌碼面，自台股上市櫃股票中篩選出具備「回檔整理」或「即將突破」潛力的標的。
-#只掃描成交量前 200 名股票，並以價格區間與技術指標判斷策略訊號
+#只掃描成交量前 300 名股票，並以價格區間與技術指標判斷策略訊號
 #訊號觸發與輸出：判定符合特定策略（回檔、突破前兆、外資連買）的股票並列印結果
 
 #多頭回檔訊號 (PullbackSignal)條件：均線呈多頭排列 + 股價離 20 日線 0~5% 內 + 5日乖離率介於 0~3.5% + KD 之 K 值 $\le$ 70。目的：尋找強勢多頭格局中，拉回至支撐位置的買點。
@@ -16,7 +16,7 @@ from FinMind.data import DataLoader
 #目的：結合技術面回檔與籌碼面法人護盤，提高勝率。
 
 #布林壓縮+量縮訊號 (PreBreakoutSignal)
-#條件：成交量前 200 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.20 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
+#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.20 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
 #目的：捕捉熱門股在窄幅震盪、極致量縮後的即將變盤突破點。
 
 
@@ -26,7 +26,7 @@ from FinMind.data import DataLoader
 # 三個原始程式的共用設定
 PRICE_MIN = 100
 PRICE_MAX = 250
-TOP_VOLUME_LIMIT = 200
+TOP_VOLUME_LIMIT = 300
 SCAN_WORKERS = 8
 FINMIND_INTERVAL_SECONDS = 0.5
 
@@ -202,7 +202,7 @@ def fetch_market_quotes():
 
 
 def build_candidates(quotes):
-    """只建立成交量前 200 大的候選股票池。"""
+    """只建立成交量前 300 大的候選股票池。"""
     volume_pool = sorted(
         quotes,
         key=lambda ticker: quotes[ticker]["Volume"] if pd.notna(quotes[ticker]["Volume"]) else -1,
