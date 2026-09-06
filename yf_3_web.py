@@ -321,12 +321,14 @@ def foreign_buy_two_days(stock_id):
         required = {"date", "name", "buy", "sell"}
         if not required.issubset(data.columns):
             return False
-        data = data[data["name"].eq("Foreign_Investor")].copy()
+        data["name"] = data["name"].astype(str).str.strip()
+        data = data[data["name"].str.casefold().eq("foreign_investor")].copy()
         if data.empty:
             return False
+        data["date"] = pd.to_datetime(data["date"], errors="coerce")
         data["buy"] = pd.to_numeric(data["buy"], errors="coerce")
         data["sell"] = pd.to_numeric(data["sell"], errors="coerce")
-        daily = data.dropna(subset=["buy", "sell"]).groupby("date")[["buy", "sell"]].sum()
+        daily = data.dropna(subset=["date", "buy", "sell"]).groupby("date")[["buy", "sell"]].sum()
         net = (daily["buy"] - daily["sell"]).sort_index(ascending=False)
         return len(net) >= 2 and net.iloc[0] > 0 and net.iloc[1] > 0
     except Exception:
@@ -437,10 +439,15 @@ def main():
     metric_columns[0].metric("有效資料", f"{len(output)} / {candidate_count}")
     metric_columns[1].metric("價格池", f"{price_count} 檔")
     metric_columns[2].metric("成交量池", f"{volume_count} 檔")
-    metric_columns[3].metric("回檔訊號", f"{int(output['PullbackSignal'].sum())} 檔")
-    metric_columns[4].metric("突破前兆", f"{int(output['PreBreakoutSignal'].sum())} 檔")
+    metric_columns[3].metric("100~250 回檔", f"{int(output['Pullback100250'].sum())} 檔")
+    metric_columns[4].metric("最終回檔", f"{int(output['FinalPullbackSignal'].sum())} 檔")
 
     st.caption(f"最後更新：{pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}　|　點擊表格欄位可排序")
+    st.caption(
+        f"技術回檔 {int(output['Pullback100250'].sum())} 檔　|　"
+        f"外資連買 {int(output['ForeignBuy2Days'].sum())} 檔　|　"
+        f"突破前兆 {int(output['PreBreakoutSignal'].sum())} 檔"
+    )
     tabs = st.tabs(["策略總覽", "多頭回檔", "突破前兆", "全部資料"])
     with tabs[0]:
         st.subheader("今日策略候選")
