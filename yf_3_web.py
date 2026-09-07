@@ -154,6 +154,26 @@ def to_number(series):
     return pd.to_numeric(series.astype(str).str.replace(",", "", regex=False), errors="coerce")
 
 
+def normalize_market_date(value):
+    text = str(value).strip().replace("/", "").replace("-", "")
+    if len(text) == 7 and text.isdigit():
+        try:
+            return pd.Timestamp(
+                year=int(text[:3]) + 1911,
+                month=int(text[3:5]),
+                day=int(text[5:7]),
+            )
+        except ValueError:
+            return pd.NaT
+    parsed = pd.to_datetime(value, errors="coerce")
+    if pd.isna(parsed):
+        return pd.NaT
+    parsed = pd.Timestamp(parsed)
+    if parsed.tzinfo is not None:
+        parsed = parsed.tz_localize(None)
+    return parsed.normalize()
+
+
 def fetch_market_quotes():
     """取得上市櫃最新行情、名稱與成交量。"""
     endpoints = [
@@ -182,6 +202,7 @@ def fetch_market_quotes():
             data["Open"] = to_number(data[open_col])
             data["High"] = to_number(data[high_col])
             data["Low"] = to_number(data[low_col])
+            data["QuoteDate"] = data["Date"].map(normalize_market_date)
             data = data[data["Code"].str.fullmatch(r"\d+", na=False)]
             for row in data.itertuples():
                 ticker = f"{row.Code}{suffix}"
@@ -193,6 +214,7 @@ def fetch_market_quotes():
                     "Open": row.Open,
                     "High": row.High,
                     "Low": row.Low,
+                    "QuoteDate": row.QuoteDate,
                 })
         except Exception as error:
             print(f"市場 API 失敗：{error}")
@@ -229,10 +251,16 @@ def normalize_history(df, ticker, quote):
         return None
     df = df.dropna(subset=required).copy()
     if quote and len(df) > 0:
-        last_index = df.index[-1]
-        for column in required:
-            if pd.notna(quote.get(column)):
-                df.loc[last_index, column] = quote[column]
+        quote_date = normalize_market_date(quote.get("QuoteDate"))
+        latest_date = normalize_market_date(df.index[-1])
+        if pd.notna(quote_date) and pd.notna(latest_date):
+            if quote_date > latest_date:
+                df.loc[quote_date, required] = [quote.get(column) for column in required]
+                df = df.sort_index()
+            elif quote_date == latest_date:
+                for column in required:
+                    if pd.notna(quote.get(column)):
+                        df.loc[df.index[-1], column] = quote[column]
     return df
 
 
