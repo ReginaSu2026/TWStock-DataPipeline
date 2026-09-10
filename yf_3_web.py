@@ -16,7 +16,7 @@ from FinMind.data import DataLoader
 #目的：結合技術面回檔與籌碼面法人護盤，提高勝率。
 
 #布林壓縮+量縮訊號 (PreBreakoutSignal)
-#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.20 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
+#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.06 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
 #目的：捕捉熱門股在窄幅震盪、極致量縮後的即將變盤突破點。
 
 
@@ -327,7 +327,7 @@ def evaluate_signals(metrics, price_pool, volume_pool):
         metrics["Ticker"] in volume_pool
         and PRICE_MIN <= close <= PRICE_MAX
         and close > metrics["MA5"]
-        and metrics["BB_Width"] < 0.20
+        and metrics["BB_Width"] < 0.06
         and metrics["Volume"] / metrics["Vol_MA20"] < 0.90
     )
     metrics.update({
