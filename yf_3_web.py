@@ -174,6 +174,16 @@ def normalize_market_date(value):
     return parsed.normalize()
 
 
+def is_support_near_ma(close, ma, tolerance=3.5):
+    """Return True when the close is within tolerance percent above a moving average.
+    This helps check whether price is anchored near MA5 or MA10 support.
+    """
+    if pd.isna(close) or pd.isna(ma) or ma == 0:
+        return False
+    offset = (close - ma) / ma * 100
+    return bool(0 <= offset <= tolerance)
+
+
 def is_bb_width_new_low(history, current, window=60):
     """Return True when current BB_Width is lower than the minimum
     of the previous recent window values, meaning it just formed a new low.
@@ -310,6 +320,7 @@ def calculate_metrics(ticker, quote):
         return {
             "Ticker": ticker,
             "Name": STOCK_NAMES.get(ticker) or quote.get("Name", "") or ticker.rsplit(".", 1)[0],
+            "Open": float(latest["Open"]),
             "Close": float(latest["Close"]),
             "MA5": float(latest["MA5"]),
             "MA10": float(latest["MA10"]),
@@ -330,7 +341,20 @@ def calculate_metrics(ticker, quote):
 
 def evaluate_signals(metrics, price_pool, volume_pool):
     close = metrics["Close"]
+    open_price = metrics.get("Open", close)
     ma_trend = metrics["MA5"] > metrics["MA10"] > metrics["MA20"]
+
+    support_ma5 = is_support_near_ma(close, metrics["MA5"])
+    support_ma10 = is_support_near_ma(close, metrics["MA10"])
+    support_near = support_ma5 or support_ma10
+
+    pullback_optimized = (
+        ma_trend
+        and close >= open_price
+        and support_near
+        and metrics["K"] <= 70
+    )
+
     pullback = (
         ma_trend
         and 0 <= (close - metrics["MA20"]) / metrics["MA20"] * 100 <= 5
@@ -356,11 +380,23 @@ def evaluate_signals(metrics, price_pool, volume_pool):
         and metrics["Volume"] / metrics["Vol_MA20"] < 0.90
     )
     metrics.update({
-        "PullbackSignal": pullback,
+        "PullbackSignal": pullback_optimized,
         "Pullback100250": pullback_100_250,
         "PreBreakoutSignal": prebreakout,
     })
     return metrics
+
+
+def foreign_buy_two_days_check(net):
+    """Return True when the latest two days both show foreign buy net > 0,
+    and the recent two-day combined net buy is greater than 500 lots.
+    """
+    if net is None or len(net) < 2:
+        return False
+    recent = pd.Series(net, dtype="float64").dropna().sort_index(ascending=False).head(2)
+    if recent.empty or len(recent) < 2:
+        return False
+    return bool(recent.iloc[0] > 0 and recent.iloc[1] > 0 and recent.sum() > 500)
 
 
 def foreign_buy_two_days(stock_id):
@@ -383,7 +419,7 @@ def foreign_buy_two_days(stock_id):
         data["sell"] = pd.to_numeric(data["sell"], errors="coerce")
         daily = data.dropna(subset=["date", "buy", "sell"]).groupby("date")[["buy", "sell"]].sum()
         net = (daily["buy"] - daily["sell"]).sort_index(ascending=False)
-        return len(net) >= 2 and net.iloc[0] > 0 and net.iloc[1] > 0
+        return foreign_buy_two_days_check(net)
     except Exception:
         return False
 
@@ -509,7 +545,7 @@ def main():
             column_config=table_config(), width="stretch", hide_index=True,
         )
     with tabs[1]:
-        st.subheader("均線多頭回檔與外資連買")
+        st.subheader("均線多頭回檔與外資連買回檔")
         pullback = output[output["FinalPullbackSignal"]].sort_values("K")
         if pullback.empty:
             st.info("目前沒有符合回檔與外資連買條件的標的。")
