@@ -16,7 +16,7 @@ from FinMind.data import DataLoader
 #目的：結合技術面回檔與籌碼面法人護盤，提高勝率。
 
 #布林壓縮+量縮訊號 (PreBreakoutSignal)
-#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width < 0.06 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
+#條件：成交量前 300 大 + 股價介於 100~250 元 + 股價大於 MA5 + 布林寬度 BB_Width 「當前值是否低於前 60/120 日歷史最低值」 + 當日成交量為 20 日均量的 90% 以下 (< 0.90)。
 #目的：捕捉熱門股在窄幅震盪、極致量縮後的即將變盤突破點。
 
 
@@ -174,6 +174,19 @@ def normalize_market_date(value):
     return parsed.normalize()
 
 
+def is_bb_width_new_low(history, current, window=60):
+    """Return True when current BB_Width is lower than the minimum
+    of the previous recent window values, meaning it just formed a new low.
+    """
+    values = pd.Series(history, dtype="float64").dropna()
+    if values.empty:
+        return False
+    prior = values.tail(window)
+    if prior.empty:
+        return False
+    return bool(float(current) < float(prior.min()))
+
+
 def fetch_market_quotes():
     """取得上市櫃最新行情、名稱與成交量。"""
     endpoints = [
@@ -288,6 +301,12 @@ def calculate_metrics(ticker, quote):
         latest = df.iloc[-1]
         if latest[["MA5", "MA10", "MA20", "BIAS5", "K", "D", "BB_Width", "Vol_MA5", "Vol_MA20"]].isna().any():
             return None
+
+        bb_values = df["BB_Width"].dropna().astype(float).tolist()
+        current_bb_width = float(latest["BB_Width"])
+        prior_60 = bb_values[-61:-1] if len(bb_values) >= 61 else bb_values[:-1]
+        prior_120 = bb_values[-121:-1] if len(bb_values) >= 121 else bb_values[:-1]
+
         return {
             "Ticker": ticker,
             "Name": STOCK_NAMES.get(ticker) or quote.get("Name", "") or ticker.rsplit(".", 1)[0],
@@ -299,9 +318,11 @@ def calculate_metrics(ticker, quote):
             "K": float(latest["K"]),
             "D": float(latest["D"]),
             "Vol_Ratio": float(latest["Volume"] / latest["Vol_MA5"]),
-            "BB_Width": float(latest["BB_Width"]),
+            "BB_Width": current_bb_width,
             "Volume": float(latest["Volume"]),
             "Vol_MA20": float(latest["Vol_MA20"]),
+            "BB_Width_60dNewLow": is_bb_width_new_low(prior_60, current_bb_width, 60),
+            "BB_Width_120dNewLow": is_bb_width_new_low(prior_120, current_bb_width, 120),
         }
     except Exception:
         return None
@@ -323,11 +344,15 @@ def evaluate_signals(metrics, price_pool, volume_pool):
         and 0 <= metrics["BIAS5"] <= 3.5
         and metrics["K"] <= 70
     )
+    bb_width_new_low = (
+        metrics.get("BB_Width_60dNewLow", False)
+        or metrics.get("BB_Width_120dNewLow", False)
+    )
     prebreakout = (
         metrics["Ticker"] in volume_pool
         and PRICE_MIN <= close <= PRICE_MAX
         and close > metrics["MA5"]
-        and metrics["BB_Width"] < 0.06
+        and bb_width_new_low
         and metrics["Volume"] / metrics["Vol_MA20"] < 0.90
     )
     metrics.update({
